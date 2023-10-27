@@ -121,17 +121,6 @@ step "rolling-deployment" {
             Octopus.Action.Script.Syntax = "PowerShell"
         }
         worker_pool_variable = ""
-
-        packages "Trident.Web" {
-            acquisition_location = "Server"
-            feed = "octopus-server-built-in"
-            package_id = "Trident.Web"
-            properties = {
-                Extract = "True"
-                Purpose = ""
-                SelectionMode = "immediate"
-            }
-        }
     }
 
     action "add-to-lb" {
