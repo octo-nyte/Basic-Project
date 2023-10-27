@@ -1,0 +1,170 @@
+step "notify-deploy-starting" {
+    name = "Notify Deploy Starting"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Successfully Notified Team/s that a Deployment has Started\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "configure-sql-db" {
+    name = "Configure SQL DB"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Database Configured\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "deploy-db-changes" {
+    name = "Deploy DB Changes"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Database Changes Applied\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "rolling-deployment" {
+    name = "Rolling Deployment"
+    properties = {
+        Octopus.Action.MaxParallelism = "1"
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action "drain-node-from-lb" {
+        action_type = "Octopus.Script"
+        name = "Drain Node from LB"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                Write-Highlight "Drain Web Server Traffic on Load Balancer"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Draining Node. Completed: 0%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Draining Node. Completed: 33%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Draining Node. Completed: 66%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Draining Node. Completed: 100%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Successfully Drained Web Server Traffic on Load Balancer"
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+
+    action "remove-from-lb" {
+        action_type = "Octopus.Script"
+        name = "Remove from LB"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                Write-Highlight "Removing Web Server from Load Balancer"
+                Start-Sleep -Seconds 3
+                Write-Highlight "Successfully Removed Web Server from Load Balancer"
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+
+    action "upload-package" {
+        action_type = "Octopus.Script"
+        name = "Upload Package"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                Write-Highlight "Uploading Package to Web Server. Completed: 0%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Uploading Package to Web Server. Completed: 25%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Uploading Package to Web Server. Completed: 50%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Uploading Package to Web Server. Completed: 75%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Uploading Package to Web Server. Completed: 100%"
+                Start-Sleep -Seconds 1
+                Write-Highlight "Successfully Uploaded Package to Web Server"
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+
+        packages "Trident.Web" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Web"
+            properties = {
+                Extract = "True"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+    }
+
+    action "add-to-lb" {
+        action_type = "Octopus.Script"
+        name = "Add to LB"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                Write-Highlight "Add Web Server back into the Load Balancer"
+                Start-Sleep -Seconds 3
+                Write-Highlight "Successfully Added the Web Server back into the Load Balancer"
+                EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "notify-deploy-finished" {
+    name = "Notify Deploy Finished"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Successfully Notified Team/s that a Deployment has Finished, and to check the result!\""
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
