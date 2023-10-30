@@ -150,7 +150,7 @@ step "notify-deploy-finished" {
         action_type = "Octopus.Script"
         properties = {
             Octopus.Action.RunOnServer = "false"
-            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Success\""
+            Octopus.Action.Script.ScriptBody = "Write-Highlight \"Successfully Notified Team/s that a Deployment has Finished, and to check the result!\""
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
